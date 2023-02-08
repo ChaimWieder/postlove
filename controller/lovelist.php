@@ -77,6 +77,7 @@ class lovelist
 	public function base ($user_id, $page)
 	{
 		//$short = $this->request->variable('short', '');
+		$mode = $this->request->variable('mode', '');
 		$short = $this->request->is_ajax();
 		if ($short)
 		{
@@ -84,6 +85,7 @@ class lovelist
 				'SHORT' => true,
 			));
 		}
+
 		$limit = 50;
 		$start = ($page - 1) * $limit;
 
@@ -108,23 +110,62 @@ class lovelist
 		{
 			return -1;
 		}
-
-		$sql_array = array(
-			'SELECT'	=> 'COUNT(*) as count',
-			'FROM'	=> array(
-				POSTS_TABLE	=> 'p',
-				TOPICS_TABLE	=> 't',
-			),
-			'LEFT_JOIN'	=> array(
-				array(
-					'FROM'	=> array($this->likes_table	=> 'pl'),
-					'ON'	=> 'pl.post_id = p.post_id'
-				),
-			),
-			'WHERE'	=> 'p.topic_id = t.topic_id AND (p.poster_id = ' . (int) $user_id . ' OR  pl.user_id = ' . (int) $user_id . ') AND pl.user_id > 0 AND ' . $this->db->sql_in_set('p.forum_id', $forum_ids),
-			'ORDER_BY'	=> 'pl.liketime DESC',
-			'GROUP_BY'	=> 'pl.liketime, pl.user_id, p.post_id, t.topic_title'
-		);
+		switch($mode){
+			case 'given':
+				$sql_array = array(
+					'SELECT'	=> 'COUNT(*) as count',
+					'FROM'	=> array(
+						POSTS_TABLE	=> 'p',
+						TOPICS_TABLE	=> 't',
+					),
+					'LEFT_JOIN'	=> array(
+						array(
+							'FROM'	=> array($this->likes_table	=> 'pl'),
+							'ON'	=> 'pl.post_id = p.post_id'
+						),
+					),
+					'WHERE'	=> 'p.topic_id = t.topic_id AND ( pl.user_id = ' . (int) $user_id . ') AND pl.user_id > 0 AND ' . $this->db->sql_in_set('p.forum_id', $forum_ids),
+					'ORDER_BY'	=> 'pl.liketime DESC',
+					'GROUP_BY'	=> 'pl.liketime, pl.user_id, p.post_id, t.topic_title'
+				);
+				break;
+			case 'received':
+				$sql_array = array(
+					'SELECT'	=> 'COUNT(*) as count',
+					'FROM'	=> array(
+						POSTS_TABLE	=> 'p',
+						TOPICS_TABLE	=> 't',
+					),
+					'LEFT_JOIN'	=> array(
+						array(
+							'FROM'	=> array($this->likes_table	=> 'pl'),
+							'ON'	=> 'pl.post_id = p.post_id'
+						),
+					),
+					'WHERE'	=> 'p.topic_id = t.topic_id AND (p.poster_id = ' . (int) $user_id . ') AND pl.user_id > 0 AND ' . $this->db->sql_in_set('p.forum_id', $forum_ids),
+					'ORDER_BY'	=> 'pl.liketime DESC',
+					'GROUP_BY'	=> 'pl.liketime, pl.user_id, p.post_id, t.topic_title'
+				);
+				break;
+			default:
+				$sql_array = array(
+					'SELECT'	=> 'COUNT(*) as count',
+					'FROM'	=> array(
+						POSTS_TABLE	=> 'p',
+						TOPICS_TABLE	=> 't',
+					),
+					'LEFT_JOIN'	=> array(
+						array(
+							'FROM'	=> array($this->likes_table	=> 'pl'),
+							'ON'	=> 'pl.post_id = p.post_id'
+						),
+					),
+					'WHERE'	=> 'p.topic_id = t.topic_id AND (p.poster_id = ' . (int) $user_id . ' OR  pl.user_id = ' . (int) $user_id . ') AND pl.user_id > 0 AND ' . $this->db->sql_in_set('p.forum_id', $forum_ids),
+					'ORDER_BY'	=> 'pl.liketime DESC',
+					'GROUP_BY'	=> 'pl.liketime, pl.user_id, p.post_id, t.topic_title'
+				);
+			break;
+		}
 		$sql = $this->db->sql_build_query('SELECT', $sql_array);
 		$result = $this->db->sql_query($sql);
 		$counter = 0;
@@ -141,6 +182,7 @@ class lovelist
 			$users = $output = $raw_output = array();
 			while ($row = $this->db->sql_fetchrow($result))
 			{
+				
 				if ($row['liker_id'] != $user_id)
 				{
 					$users[] = $row['liker_id'];
@@ -150,20 +192,37 @@ class lovelist
 					$users[] = $row['poster'];
 				}
 				$raw_output[] = $row;
+				
 			}
 			$users[] = (int) $user_id;
 			$users = array_unique($users);
 			$this->db->sql_freeresult($result);
 			$this->user_loader->load_users($users);
+			$count = 0;
+					
+						
+			
 			foreach ($raw_output as $row)
 			{
-				$post_link = '<a href="' . $this->root_path .($short == 1 ? '' : ($page > 1 ? '../../../' : '../')) .'viewtopic.php?p=' . $row['post_id'] . '#'. $row['post_id'] .'" target="_blank" >' . $row['post_subject'] . '</a>';
-				$topic_link = '<a href="' . $this->root_path .($short == 1 ? '' : ($page > 1 ? '../../../' : '../')) .'viewtopic.php?t=' . $row['topic_id'] . '" target="_blank" class="topictitle">' . $row['topic_title'] . '</a>';
-				$this->template->assign_block_vars('lovelist', array(
-					'LINE' => $this->lang->lang('LIKE_LINE', $this->user->format_date($row['liketime']), $this->user_loader->get_username($row['liker_id'], 'full'), $this->user_loader->get_username($row['poster'], 'full'), $post_link, $topic_link),
-				));
-			}
+					
+						$post_link = '<a href="' . $this->root_path .($short == 1 ? '' : ($page > 1 ? '../../../' : '../')) .'viewtopic.php?p=' . $row['post_id'] . '#p'. $row['post_id'] .'" target="_blank" >' . $row['topic_title'] . '</a>';
+						$this->template->assign_block_vars('lovelist', array(
+							'LINE' => $this->lang->lang('LIKE_LINE', $this->user->format_date($row['liketime']), $this->user_loader->get_username($row['liker_id'], 'full'), $this->user_loader->get_username($row['poster'], 'full'), $post_link),
 
+							//'LINE' => $this->lang->lang('LIKE_LINE', $this->user->format_date($row['liketime']), $this->user_loader->get_username($row['liker_id'], 'full', '',$this->root_path. ($short == 1 ? '' : ($page > 1 ? '../../../' : '../')).'memberlist.php?mode=viewprofile'), $this->user_loader->get_username($row['poster'], 'full', '',$this->root_path.($short == 1 ? '' : ($page > 1 ? '../../../' : '../')).'memberlist.php?mode=viewprofile'), $post_link),
+						));
+						
+			}
+				//$post_link = '<a href="' . $this->root_path .($short == 1 ? '' : ($page > 1 ? '../../../' : '../')) .'viewtopic.php?p=' . $row['post_id'] . '#p'. $row['post_id'] .'" target="_blank" >' . $row['post_subject'] . '</a>';
+				//$topic_link = '<a href="' . $this->root_path .($short == 1 ? '' : ($page > 1 ? '../../../' : '../')) .'viewtopic.php?t=' . $row['topic_id'] . '" target="_blank" class="topictitle">' . $row['topic_title'] . '</a>';
+				// $this->template->assign_block_vars('lovelist', array(
+					// 'LINE' => $this->lang->lang('LIKE_LINE', $this->user->format_date($row['liketime']), $this->user_loader->get_username($row['liker_id'], 'full', '',$this->root_path. ($short == 1 ? '' : ($page > 1 ? '../../../' : '../')).'memberlist.php?mode=viewprofile'), $this->user_loader->get_username($row['poster'], 'full', '',$this->root_path.($short == 1 ? '' : ($page > 1 ? '../../../' : '../')).'memberlist.php?mode=viewprofile'), $post_link, $topic_link ),
+				// ));
+			$username = $this->user_loader->get_username($user_id, 'full');
+			$this->template->assign_vars(array(
+				'like_list' => $this->lang->lang('LIKE_LIST', $username),
+			));
+		
 			$this->pagination->generate_template_pagination(array(
 					'routes' => array(
 						'postlove_list',
@@ -171,6 +230,7 @@ class lovelist
 					),
 					'params' => array(
 						'user_id' => $user_id,
+						'mode' => $mode,
 					),
 				), 'pagination', 'page', $counter, $limit, $start);
 		}
@@ -178,3 +238,4 @@ class lovelist
 		return $this->helper->render('postlove_base.html', $page_title);
 	}
 }
+

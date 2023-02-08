@@ -6,12 +6,14 @@ postlove_control:
 
 postlove_list:
     path: /postlove/{user_id}
-    defaults: { _controller: anavaro.postlove.lovelist:base, page: 1 }
+    defaults: { _controller: anavaro.postlove.lovelist:base, page: 1, mode: ""}
     requirements:
         user_id: \d+
+        mode: \w+
 
 postlove_list_page:
     path: /postlove/{user_id}/page/{page}
-    defaults: { _controller: anavaro.postlove.lovelist:base }
+    defaults: { _controller: anavaro.postlove.lovelist:base, mode: ""}
     requirements:
         user_id: \d+
+        mode: \w+

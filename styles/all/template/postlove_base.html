@@ -1,30 +1,34 @@
 <!-- IF !SHORT -->
 <!-- INCLUDE overall_header.html -->
 <!-- ENDIF -->
-<!-- IF .lovelist -->
-<br>
+
+<h2>{like_list}</h2>
+
+<div class="panel bg1">
 	<div class="inner">
+
+<!-- IF .lovelist -->
 		<ul class="topiclist">
-		<!-- BEGIN lovelist -->
+			<!-- BEGIN lovelist -->	
 			<li class="row <!-- IF lovelist.S_ROW_COUNT is odd -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">{lovelist.LINE}</li>
-		<!-- END lovelist -->
+			<!-- END lovelist -->
 		</ul>
-	</div>
+
+		<!-- IF .pagination -->
+		<div class="pagination">
+			<!-- IF .pagination -->
+				 <!-- INCLUDE pagination.html -->
+			<!-- ELSE -->
+				 {PAGE_NUMBER}
+			<!-- ENDIF -->
+		</div>
+		<!-- ENDIF -->
+
 <!-- ELSE -->
 	{L_NO_ACTIONS_FOUND}
 <!-- ENDIF -->
-<!-- IF .pagination -->
-	<div class="pagination">
-		<!-- IF .pagination -->
-			 &bull; <!-- INCLUDE pagination.html -->
-		<!-- ELSE -->
-			 &bull; {PAGE_NUMBER}
-		<!-- ENDIF -->
 	</div>
-<!-- ENDIF -->
-<br>
-<br>
-<br>
+</div>
 <!-- IF !SHORT -->
 <!-- INCLUDE overall_footer.html -->
 <!-- ENDIF -->

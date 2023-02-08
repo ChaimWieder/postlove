@@ -46,7 +46,7 @@ class main_listener implements EventSubscriberInterface
 	* @param string			$root_path	phpBB root path
 	* @param string			$php_ext	phpEx
 	*/
-	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\template\template $template, \phpbb\user $user,
+	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\template\template $template, \phpbb\language\language	$language, \phpbb\user $user,
 	\phpbb\controller\helper $helper,
 	$loves_table)
 	{
@@ -54,6 +54,7 @@ class main_listener implements EventSubscriberInterface
 		$this->config = $config;
 		$this->db = $db;
 		$this->template = $template;
+		$this->language = $language;
 		$this->user = $user;
 		$this->helper = $helper;
 		$this->loves_table = $loves_table;
@@ -61,7 +62,15 @@ class main_listener implements EventSubscriberInterface
 
 	public function load_language_on_setup($event)
 	{
-		$this->user->add_lang_ext('anavaro/postlove', 'postlove');
+		$lang_set_ext = $event['lang_set_ext'];
+		$lang_set_ext[] = array(
+			'ext_name' => 'anavaro/postlove',
+			'lang_set' => 'postlove',
+		);
+		$event['lang_set_ext'] = $lang_set_ext;
+		
+		//old
+		//$this->user->add_lang_ext('anavaro/postlove', 'postlove');
 	}
 
 	public function modify_post_row($event)
@@ -148,20 +157,31 @@ class main_listener implements EventSubscriberInterface
 				$sql = 'SELECT COUNT(post_id) as count FROM ' .$this->loves_table . ' WHERE user_id = ' . (int) $event['row']['user_id'];
 				$result = $this->db->sql_query($sql);
 				$count = (int) $this->db->sql_fetchfield('count');
-				$this->db->sql_freeresult($result);
-				$post_row = $event['post_row'];
-				$post_row['USER_LIKES'] = $count;
-				$event['post_row'] = $post_row;
+				if($count != 0){
+					$like_count = $this->language->lang('LIKES_EVER', $count);
+					$this->db->sql_freeresult($result);
+					$post_row = $event['post_row'];
+					$post_row['USER_LIKES'] = $like_count;
+					$post_row['USER_LIKES_URL'] = $this->helper->route('postlove_list', array('user_id' => (int) $event['row']['user_id'] ,'mode' => 'given'));
+					$event['post_row'] = $post_row;
+				}
+				
+
 			}
 			if ($this->config['postlove_show_liked'])
 			{
 				$sql = 'SELECT COUNT(post_id) as count FROM ' . $this->loves_table . ' WHERE liked_user_id = ' . (int) $event['row']['user_id'];
 				$result = $this->db->sql_query($sql);
 				$count = (int) $this->db->sql_fetchfield('count');
-				$this->db->sql_freeresult($result);
-				$post_row = $event['post_row'];
-				$post_row['USER_LIKED'] = $count;
-				$event['post_row'] = $post_row;
+				if($count != 0){
+					$like_count = $this->language->lang('LIKES_EVER', (int)$count);
+				
+					$this->db->sql_freeresult($result);
+					$post_row = $event['post_row'];
+					$post_row['USER_LIKED'] = $like_count;
+					$post_row['USER_LIKED_URL'] = $this->helper->route('postlove_list', array('user_id' => (int) $event['row']['user_id'] ,'mode' => 'received'));
+					$event['post_row'] = $post_row;
+				}
 			}
 		}
 	}
@@ -172,7 +192,7 @@ class main_listener implements EventSubscriberInterface
 		$this->user->get_profile_fields($this->user->data['user_id']);
 		if (!(isset($this->user->profile_fields['pf_postlove_hide']) && $this->user->profile_fields['pf_postlove_hide']))
 		{
-			$this->template->assign_var('POSTLOVE_STATS', $this->helper->route('postlove_list', array('user_id' => $event['member']['user_id'])) . '?short=1');
+			$this->template->assign_var('POSTLOVE_STATS', $this->helper->route('postlove_list', array('user_id' => $event['member']['user_id'])));
 		}
 	}
 

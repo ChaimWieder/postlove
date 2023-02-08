@@ -1,10 +1,20 @@
 <!-- IF SHOW_USER_LIKES -->
 	<!-- IF postrow.USER_LIKES -->
-		<dd class="profile-custom-field" title="{L_POSTLOVE_USER_LIKES}"><span class="liked_info"></span> x {postrow.USER_LIKES}</dd>
+		<dd class="profile-custom-field">
+			<strong class="">{L_POSTLOVE_USER_LIKES}</strong>
+			<a href="{postrow.USER_LIKES_URL}">{postrow.USER_LIKES}</a>
+		</dd>
+	
+		<!--dd class="profile-custom-field" title="{L_POSTLOVE_USER_LIKES}"><span class="liked_info"></span> x {postrow.USER_LIKES}</dd-->
 	<!-- ENDIF -->
 <!-- ENDIF -->
 <!-- IF SHOW_USER_LIKED -->
 	<!-- IF postrow.USER_LIKED -->
-		<dd class="profile-custom-field" title="{L_POSTLOVE_USER_LIKED}"><span class="like_info"></span> x {postrow.USER_LIKED}</dd>
+	<dd class="profile-custom-field">
+		<strong class="">{L_POSTLOVE_USER_LIKED}</strong>
+		<a href="{postrow.USER_LIKED_URL}">{postrow.USER_LIKED}</a>
+	</dd>
+	
+		<!--dd class="profile-custom-field" title="{L_POSTLOVE_USER_LIKED}"><span class="like_info"></span> x {postrow.USER_LIKED}</dd-->
 	<!-- ENDIF -->
 <!-- ENDIF -->
